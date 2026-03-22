@@ -1,3 +1,4 @@
+from __future__ import annotations
 # Copyright (C) 2025 Arcee AI
 # SPDX-License-Identifier: LGPL-3.0-only
 
@@ -72,7 +73,8 @@ class MergeActorBase:
             monkeypatch_lmeval_shuffle()
 
         # monkeypatch_tqdm()
-        monkeypatch_lmeval_vllm()
+        if self.vllm:
+            monkeypatch_lmeval_vllm()
 
 
 @ray.remote(num_cpus=1, num_gpus=1.0)
@@ -96,17 +98,40 @@ class OnDiskMergeEvaluator(MergeActorBase):
         )
         torch_accelerator_module.empty_cache()
         LOG.info("Merging model")
+        print("Merging model")
         merged_path = merge_model(
             genotype, self.genome, self.model_storage_path, self.merge_options
         )
         if not merged_path:
             LOG.error("Model merge failed")
+            print("Model merge failed")
             return {"score": None, "results": None}
 
-        model_kwargs = {}
-        if self.quantization_config is not None:
-            model_kwargs["quantization_config"] = self.quantization_config
+        # Add smoke test here
+        LOG.info("Running smoke test")
+        print("Running smoke test")
+        try:
+            model_kwargs = {}
+            if self.quantization_config is not None:
+                model_kwargs["quantization_config"] = self.quantization_config
+
+            # Load model for smoke test
+            from lm_eval.models.huggingface import HFLM
+            test_model = HFLM(pretrained=merged_path, **model_kwargs)
+
+            if not self.smoke_test_model(test_model, self.task_manager):
+                LOG.warning("Smoke test failed - returning zero score")
+                print("Smoke test failed - returning zero score")
+                return {"score": 0.0, "results": {task.name: {"acc": 0.0} for task in self.config.tasks}}
+            else:
+                print("Smoke test passed - Congratulation")
+        except Exception as e:
+            LOG.error(f"Smoke test error: {e}")
+            print(f"Smoke test error: {e}")
+            return {"score": 0.0, "results": {task.name: {"acc": 0.0} for task in self.config.tasks}}
+
         LOG.info(f"Model merged to {merged_path}")
+        print(f"Model merged to {merged_path}")
         return evaluate_model(
             merged_path,
             self.config.tasks,
@@ -119,6 +144,62 @@ class OnDiskMergeEvaluator(MergeActorBase):
             fewshot_as_multiturn=self.config.fewshot_as_multiturn,
             model_kwargs=model_kwargs,
         )
+  
+    def smoke_test_model(self, model, task_manager=None):
+        """Quick test to check if model produces coherent responses."""
+        try:
+            # Simple smoke test prompt
+            test_prompt = "Tell me about yourself."
+
+            # Generate response
+            # if hasattr(model, 'generate'):
+            if hasattr(model, "model") and hasattr(model, "tokenizer"):
+                hf_model = model.model
+                tokenizer = model.tokenizer
+                inputs = tokenizer(test_prompt, return_tensors="pt")
+                inputs = {k: v.to(hf_model.device) for k, v in inputs.items()}
+
+                with torch.no_grad():
+                    outputs = hf_model.generate(
+                        **inputs,
+                        max_new_tokens=4096,
+                        do_sample=False,
+                        pad_token_id=tokenizer.eos_token_id,
+                    )
+
+                response = tokenizer.decode(outputs[0], skip_special_tokens=True)
+            else:
+                logging.warning(f"Unsupported model type for smoke test: {type(model)}")
+                return False
+
+            print(f"Current Merged model's response is : {response[:1000]}")
+
+            # Check for rambling / repetition
+            if self.detect_rambling_simple(response):
+                return False
+
+            if response == "Model response test failed":
+                return False
+
+            return True
+        except Exception as e:
+            logging.warning(f"Smoke test failed: {e}")
+            return False
+
+    def detect_rambling_simple(self, text):
+        """Simple detection of rambling/repetition."""
+        # Check for excessive repetition
+        words = text.split()
+        rambling_cnt = 0
+        if len(words) > 20:
+            # Count repeated phrases
+            for i in range(len(words) - 5):
+                phrase = ' '.join(words[i:i+5])
+                if text.count(phrase) > 2:
+                    rambling_cnt += 1
+                    if rambling_cnt > 3:
+                        return True
+        return False
 
 
 @ray.remote(num_cpus=1, num_gpus=1)
@@ -133,9 +214,7 @@ class InMemoryMergeEvaluator(MergeActorBase):
     transformers, and vLLM and may break at any time.
     """
 
-    model: Union[
-        lm_eval.models.huggingface.HFLM, lm_eval.models.vllm_causallms.VLLM, None
-    ] = None
+    model: object | None = None
     arch_info: Optional[ConfiguredModelArchitecture] = None
 
     def __init__(
@@ -264,6 +343,14 @@ class InMemoryMergeEvaluator(MergeActorBase):
 
         self._maybe_init_model(config)
 
+        # Add smoke test before full evaluation
+        LOG.info("Running smoke test")
+        if not self.smoke_test_model(self.model, self.task_manager):
+            LOG.warning("Smoke test failed - returning zero score")
+            return {"score": 0.0, "results": {task.name: {"acc": 0.0} for task in self.config.tasks}}
+        else:
+            LOG.info("Smoke test passed - Congratulation")
+
         planner = MergePlanner(
             config,
             self.arch_info.info,
@@ -351,3 +438,42 @@ class InMemoryMergeEvaluator(MergeActorBase):
         genotype: torch.Tensor,
     ) -> dict:
         return self.evaluate(genotype)
+
+    def smoke_test_model(self, model, task_manager=None):
+        """Quick test to check if model produces coherent responses."""
+        try:
+            # Simple smoke test prompt
+            test_prompt = "Tell me about yourself."
+
+            # Generate response
+            if hasattr(model, 'generate'):
+                response = model.generate(test_prompt, max_tokens=4096)
+            else:
+                # Fallback for different model types
+                response = "Model response test failed"
+
+            print(f"Current Merged' model's response is {response[:1000]}")
+
+            # Check for rambling / repetition
+            if self.detect_rambling_simple(response):
+                return False
+
+            return True
+        except Exception as e:
+            logging.warning(f"Smoke test failed: {e}")
+            return False
+
+    def detect_rambling_simple(self, text):
+        """Simple detection of rambling/repetition."""
+        # Check for excessive repetition
+        words = text.split()
+        rambling_cnt = 0
+        if len(words) > 20:
+            # Count repeated phrases
+            for i in range(len(words) - 5):
+                phrase = ' '.join(words[i:i+5])
+                if text.count(phrase) > 2:
+                    rambling_cnt += 1
+                    if rambling_cnt > 3:
+                        return True
+        return False

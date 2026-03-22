@@ -18,7 +18,7 @@ import torch
 
 from mergekit.evo.config import TaskConfiguration
 from mergekit.evo.genome import InvalidGenotypeError, ModelGenome
-from mergekit.evo.monkeypatch import monkeypatch_lmeval_vllm
+from mergekit.evo.monkeypatch import monkeypatch_lmeval_vllm, monkeypatch_strip_thinking_tags
 from mergekit.merge import run_merge
 from mergekit.options import MergeOptions
 
@@ -40,6 +40,10 @@ def _eval_model(
         **kwargs,
     )
 
+    # # TODO: implement model rambling detect logic
+    # if detect_rambling(results):
+    #     return {"score": 0.0, "results": {task.name: {"acc": 0.0} for task in tasks}}
+  
     logging.info(results["results"])
     res = 0
     for task in tasks:
@@ -59,7 +63,10 @@ def evaluate_model(
     **kwargs,
 ) -> dict:
     # monkeypatch_tqdm()
-    monkeypatch_lmeval_vllm()
+    # Strip thinking tags from model outputs before evaluation
+    monkeypatch_strip_thinking_tags()
+    if vllm:
+        monkeypatch_lmeval_vllm()
     try:
         model_args = {
             "pretrained": merged_path,

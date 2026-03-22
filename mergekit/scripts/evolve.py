@@ -270,6 +270,20 @@ def main(
         nonlocal xbest, xbest_cost
 
         res = es.result
+
+        # Get the latest evaluation results
+        latest_results = strat.evaluate_genotype(res.xbest)
+
+        # Check if any task exceeds 50% accuracy
+        for task_name, task_results in latest_results["results"].items():
+            if "acc" in task_results and task_results["acc"] > 0.5:
+                print(f"Task {task_name} exceeded 50% accuracy: {task_results['acc']:.4f}")
+                best_yaml = genome.genotype_merge_config(res.xbest).to_yaml()
+                # Save with task-specific name
+                filename = f"best_config_{task_name}_50pct.yaml"
+                with open(os.path.join(storage_path, filename), "w") as f:
+                    f.write(best_yaml)
+
         if use_wandb and run is not None:
             best_params = genome.genotype_to_param_arrays(res.xbest)
             mean_params = genome.genotype_to_param_arrays(res.xfavorite)

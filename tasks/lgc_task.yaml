@@ -1,0 +1,18 @@
+task: "lgc_task"
+dataset_path: "jeff4000/sudoku_task"
+output_type: "generate_until"
+doc_to_text: "prompt"
+doc_to_target: ["extra", "game_data", "answer"]
+training_split: "train"
+test_split: "train"
+fewshot_config:
+  sampler: "first_n"
+generation_kwargs:
+  until:
+    - "</code>"
+  max_new_tokens: 20480
+  temperature: 0.0
+metric_list:
+  - metric: "accuracy"
+    aggregation: "mean"
+    higher_is_better: true

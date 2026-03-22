@@ -1,0 +1,108 @@
+base_model: ./evolve_storage/input_models/Qwen3-4B_131373129
+dtype: bfloat16
+merge_method: ties
+parameters:
+  int8_mask: 1.0
+  normalize: 1.0
+slices:
+- sources:
+  - layer_range: [0, 6]
+    model: ./evolve_storage/input_models/4b_1_2932744254
+    parameters:
+      density: 1.0
+      weight: 0.5959931205508284
+  - layer_range: [0, 6]
+    model: ./evolve_storage/input_models/4b_2_935817604
+    parameters:
+      density: 1.0
+      weight: 0.6382721411568135
+  - layer_range: [0, 6]
+    model: ./evolve_storage/input_models/Qwen3-4B_131373129
+- sources:
+  - layer_range: [6, 12]
+    model: ./evolve_storage/input_models/4b_1_2932744254
+    parameters:
+      density: 0.7606684307953007
+      weight: 0.5636434763943007
+  - layer_range: [6, 12]
+    model: ./evolve_storage/input_models/4b_2_935817604
+    parameters:
+      density: 0.822648367311046
+      weight: 0.48598861229012125
+  - layer_range: [6, 12]
+    model: ./evolve_storage/input_models/Qwen3-4B_131373129
+- sources:
+  - layer_range: [12, 18]
+    model: ./evolve_storage/input_models/4b_1_2932744254
+    parameters:
+      density: 0.8235057655898272
+      weight: 0.3011618297317925
+  - layer_range: [12, 18]
+    model: ./evolve_storage/input_models/4b_2_935817604
+    parameters:
+      density: 0.8212029451004084
+      weight: 0.5179202569580941
+  - layer_range: [12, 18]
+    model: ./evolve_storage/input_models/Qwen3-4B_131373129
+- sources:
+  - layer_range: [18, 24]
+    model: ./evolve_storage/input_models/4b_1_2932744254
+    parameters:
+      density: 1.0
+      weight: 0.29380009575125837
+  - layer_range: [18, 24]
+    model: ./evolve_storage/input_models/4b_2_935817604
+    parameters:
+      density: 1.0
+      weight: 0.5623070516051552
+  - layer_range: [18, 24]
+    model: ./evolve_storage/input_models/Qwen3-4B_131373129
+- sources:
+  - layer_range: [24, 30]
+    model: ./evolve_storage/input_models/4b_1_2932744254
+    parameters:
+      density: 0.9878397942421385
+      weight: 0.1654247321931701
+  - layer_range: [24, 30]
+    model: ./evolve_storage/input_models/4b_2_935817604
+    parameters:
+      density: 1.0
+      weight: 0.5663226040305336
+  - layer_range: [24, 30]
+    model: ./evolve_storage/input_models/Qwen3-4B_131373129
+- sources:
+  - layer_range: [30, 36]
+    model: ./evolve_storage/input_models/4b_1_2932744254
+    parameters:
+      density: 0.8003894078384055
+      weight: 0.8795535797776195
+  - layer_range: [30, 36]
+    model: ./evolve_storage/input_models/4b_2_935817604
+    parameters:
+      density: 1.0
+      weight: 0.15610834391409822
+  - layer_range: [30, 36]
+    model: ./evolve_storage/input_models/Qwen3-4B_131373129
+
+# merge_method: ties
+# base_model: Qwen/Qwen3-4B
+# dtype: bfloat16
+# models:
+#   - model: jeff4000/4b_1
+#     parameters:
+#       weight: 1.0
+#       density: 0.5
+#   - model: jeff4000/4b_2
+#     parameters:
+#       weight: 1.0
+#       density: 0.5
+
+# merge_method: linear
+# dtype: bfloat16
+# models:
+#   - model: jeff4000/4b_1
+#     parameters:
+#       weight: 0.5
+#   - model: jeff4000/4b_2
+#     parameters:
+#       weight: 0.5
