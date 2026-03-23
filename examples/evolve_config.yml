@@ -1,9 +1,9 @@
 genome:
   models:
     - jeff4000/4b_1
+    - jeff4000/4b_2
     # - affshoot/Affine-II_5FLiMuk4H8vKRQ19vs3phPdpdkCtqAeaWVRqufgUXxvM4QzQ
     # - anton-ro/affine-5DZTN94ofug3s2oPN7ehuKFGekQkGVRGWnmsPRqab1tVDABc
-    - jeff4000/4b_2
     # - jeff4000/4b_4
   merge_method: ties
   # base_model: Qwen/Qwen3-32B
@@ -16,7 +16,7 @@ tasks:
   #   weight: 1.0
   # - name: winogrande
   #   weight: 1.0
-  - name: /root/workspace/mergekit/tasks/lgc_task.yaml
+  - name: lgc_task
     weight: 1.0
 
 limit: 100
