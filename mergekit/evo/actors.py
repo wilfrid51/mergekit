@@ -193,9 +193,9 @@ class OnDiskMergeEvaluator(MergeActorBase):
         rambling_cnt = 0
         if len(words) > 20:
             # Count repeated phrases
-            for i in range(len(words) - 5):
-                phrase = ' '.join(words[i:i+5])
-                if text.count(phrase) > 2:
+            for i in range(len(words) - 10):
+                phrase = ' '.join(words[i:i+10])
+                if text.count(phrase) > 3:
                     rambling_cnt += 1
                     if rambling_cnt > 3:
                         return True

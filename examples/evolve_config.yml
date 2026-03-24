@@ -20,9 +20,8 @@ tasks:
   #   weight: 1.0
   # - name: winogrande
   #   weight: 1.0
-  - name: lgc_task
+  - name: sudoku
     weight: 1.0
-    metric: "acc,none"
 
 limit: 20
 num_fewshot: 0

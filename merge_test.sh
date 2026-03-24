@@ -4,7 +4,7 @@ export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 mergekit-evolve \
   --storage-path ./evolve_storage \
   examples/evolve_config.yml \
-  --task-search-path /root/workspace/mergekit/tasks \
+  --batch-size 4 \
   --num-gpus 4 \
-  --i-understand-the-depths-of-the-evils-i-am-unleashing \
-  --max-fevals 10
+  --i-understand-the-depths-of-the-evils-i-am-unleashing
+  # --task-search-path /root/workspace/mergekit/tasks \

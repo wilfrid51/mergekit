@@ -1,1 +1,1 @@
-{}
+{'maxfevals': 10, 'tolfun': 1e-11}
