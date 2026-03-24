@@ -20,9 +20,12 @@ tasks:
   #   weight: 1.0
   # - name: winogrande
   #   weight: 1.0
-  - name: sudoku
+  - name: cryptarithm
     weight: 1.0
-    metric: sudoku_accuracy
+    metric: accuracy,none
+  - name: trace
+    weight: 1.0
+    metric: accuracy,none
 
 limit: 5
 num_fewshot: 0

@@ -9,6 +9,7 @@ process_results: !function utils.process_results
 generation_kwargs:
   max_gen_toks: 10240
   temperature: 0.0
+  until: "<|endoftext|>"
 metric_list:
   - metric: accuracy
     aggregation: mean
