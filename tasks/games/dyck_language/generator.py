@@ -51,8 +51,6 @@ class DyckLanguageGenerator:
         if n_types < 1 or n_types > 8:
             raise ValueError("n_types must be between 1 and 8")
 
-        n_types = 5 + random.randint(0, 3) # Force to 6 types for simplicity
-
         self.used_brackets = self.brackets[:n_types]
         rng = random.Random(seed)
 
@@ -60,8 +58,7 @@ class DyckLanguageGenerator:
         current_total_length = total_length
         if current_total_length <= 0:
             # Random length between 40-60 (always even)
-            # current_total_length = rng.randint(20, 30) * 2
-            current_total_length = rng.randint(n_types, 50) * 2
+            current_total_length = rng.randint(20, 30) * 2
         elif current_total_length % 2 != 0:
             current_total_length -= 1
 

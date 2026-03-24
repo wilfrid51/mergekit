@@ -1,0 +1,17 @@
+task: sudoku
+dataset_path: jeff4000/sudoku_task
+output_type: generate_until
+validation_split: train
+process_docs: !function utils.preprocess
+doc_to_text: "{{prompt}}"
+doc_to_target: "{{game_data}}"
+process_results: !function utils.process_results
+generation_kwargs:
+  max_gen_toks: 10240
+  temperature: 0.0
+metric_list:
+  - metric: accuracy
+    aggregation: mean
+    higher_is_better: true
+metadata:
+  version: 1.0

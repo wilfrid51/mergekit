@@ -1,20 +1,10 @@
-"""
-Cryptarithm - Verifier
-
-Verify cryptarithmetic puzzle solutions
-"""
-
 import re
-from typing import Dict, List, Optional
+import datasets
+from typing import Optional, Dict, List, Set
 
-from base.data import Data
-from base.verifier import Verifier
-
-
-class CryptarithmVerifier(Verifier):
-    """Verify cryptarithmetic puzzle solutions by validating the equation"""
-
-    def verify(self, data: Data, test_solution: str) -> bool:
+class CryptarithmVerifier:
+    """Verify Sudoku solutions"""
+    def verify(self, data: dict, test_solution: str) -> bool:
         """
         Verify if the solution is correct by checking:
         1. Extract numeric equation from model output
@@ -30,10 +20,7 @@ class CryptarithmVerifier(Verifier):
         """
         try:
             # Extract answer from response
-            from .generator import CryptarithmGenerator
-
-            generator = CryptarithmGenerator()
-            test_answer = generator.extract_answer(test_solution)
+            test_answer = self.extract_answer(test_solution)
 
             if not test_answer:
                 return False
@@ -50,7 +37,7 @@ class CryptarithmVerifier(Verifier):
                 return False
 
             # Extract letter words and operators from original question
-            letter_info = self._extract_letter_equation(data.question)
+            letter_info = self._extract_letter_equation(data.get("question", ""))
             if not letter_info:
                 return False
 
@@ -74,6 +61,69 @@ class CryptarithmVerifier(Verifier):
         except Exception:
             return False
 
+    def extract_answer(self, test_solution: str) -> str:
+        """
+        Extract answer from model response
+
+        Looks for numeric equations in various formats
+        """
+        if not test_solution:
+            return ""
+
+        # Normalize answer markers
+        test_solution = test_solution.replace("THE ANSWER IS", "The answer is")
+        test_solution = test_solution.replace("答案是：", "答案是:")
+        test_solution = test_solution.replace("答案：", "答案:")
+
+        # Try direct equation patterns first
+        equation_patterns = [
+            r"(\d+(?:\s*(?:\+|\-|\*)\s*\d+)+\s*=\s*-?\d+)",
+            r"(\d+\s*(?:\+|\-|\*)\s*\d+\s*=\s*-?\d+)",
+        ]
+
+        for pattern in equation_patterns:
+            matches = re.findall(pattern, test_solution)
+            if matches:
+                return matches[-1].strip()
+
+        # Try Chinese answer patterns
+        cn_patterns = [
+            r"答案是[：:]\s*([0-9\s\+\-\*=]+)",
+            r"答案[：:]\s*([0-9\s\+\-\*=]+)",
+            r"数字等式是[：:]\s*([0-9\s\+\-\*=]+)",
+            r"等式为[：:]\s*([0-9\s\+\-\*=]+)",
+        ]
+
+        # Try English answer patterns
+        en_patterns = [
+            r"[Tt]he answer is[：:=]\s*([0-9\s\+\-\*=]+)",
+            r"[Aa]nswer[：:=]\s*([0-9\s\+\-\*=]+)",
+            r"[Tt]he equation is[：:=]\s*([0-9\s\+\-\*=]+)",
+        ]
+
+        for pattern in cn_patterns + en_patterns:
+            matches = re.findall(pattern, test_solution, re.DOTALL)
+            if matches:
+                answer = matches[-1].strip()
+                answer = answer.replace("$", "").replace("。", "").replace(".", "")
+
+                # Verify it's a valid equation
+                if re.match(r"\d+(?:\s*(?:\+|\-|\*)\s*\d+)+\s*=\s*-?\d+", answer):
+                    return answer
+
+        # Try last line or any equation
+        lines = test_solution.strip().split("\n")
+        for line in reversed(lines):
+            equation_match = re.search(r"\d+(?:\s*(?:\+|\-|\*)\s*\d+)+\s*=\s*-?\d+", line)
+            if equation_match:
+                return equation_match.group(0)
+
+        return ""
+
+
+    def _parse_equation(self, equation: str) -> Optional[tuple[List[int], List[str]]]:
+        """Parse numeric equation into numbers and operators"""
+        # Normalize spaces
         equation = equation.strip().replace(" ", "")
 
         # Match pattern: number (op number)* = result
@@ -116,7 +166,7 @@ class CryptarithmVerifier(Verifier):
         return numbers, operators
 
     def _verify_equation(
-        self, numbers: List[int], operators: List[str], generator
+        self, numbers: List[int], operators: List[str],
     ) -> bool:
         """
         Verify equation is mathematically correct
@@ -140,10 +190,39 @@ class CryptarithmVerifier(Verifier):
                 return False
 
             # Calculate using generator's method (handles operator precedence)
-            calculated_result = generator._calculate_equation(operands, operators)
+            calculated_result = self._calculate_equation(operands, operators)
             return calculated_result == expected_result
         except Exception:
             return False
+
+    def _calculate_equation(self, operands: List[int], operators_list: List[str]) -> int:
+        """Calculate equation result with operator precedence"""
+        if len(operands) != len(operators_list) + 1:
+            raise ValueError("Operand count must be operator count + 1")
+
+        # Handle operator precedence (multiplication first)
+        ops = operators_list.copy()
+        nums = operands.copy()
+
+        # Process multiplication first
+        i = 0
+        while i < len(ops):
+            if ops[i] == "*":
+                nums[i] = nums[i] * nums[i + 1]
+                nums.pop(i + 1)
+                ops.pop(i)
+            else:
+                i += 1
+
+        # Process addition and subtraction left to right
+        result = nums[0]
+        for i in range(len(ops)):
+            if ops[i] == "+":
+                result += nums[i + 1]
+            elif ops[i] == "-":
+                result -= nums[i + 1]
+
+        return result
 
     def _extract_letter_equation(self, question: str) -> Optional[tuple[List[str], List[str]]]:
         """Extract letter words and operators from question"""
@@ -225,3 +304,24 @@ class CryptarithmVerifier(Verifier):
             used_digits.add(digit)
 
         return True
+
+
+def process_results(doc, results, game_data):
+    prediction = results[0] if results else ""
+
+    verifier = CryptarithmVerifier()
+
+    return {"accuracy": verifier.verify(game_data, prediction)}
+
+def preprocess(dataset: datasets.Dataset) -> datasets.Dataset:
+    def _process_doc(doc):
+        extra = doc["extra"]
+        game_data = extra["game_data"]
+        metadata = game_data.get("metadata") or extra.get("metadata") or {}
+
+        return {
+            "prompt": doc["prompt"],
+            "game_data": game_data,
+        }
+
+    return dataset.map(_process_doc)

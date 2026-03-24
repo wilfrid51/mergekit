@@ -369,6 +369,4 @@ Please provide your final answer (the complete filled sequence) in backticks lik
             else:
                 i += 1
 
-        print(f"dyck_language2 = {results[-1] if results else ""}")
-
         return results[-1] if results else ""

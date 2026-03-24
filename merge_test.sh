@@ -5,6 +5,6 @@ mergekit-evolve \
   --storage-path ./evolve_storage \
   examples/evolve_config.yml \
   --batch-size 4 \
-  --num-gpus 4 \
+  --num-gpus 1 \
   --i-understand-the-depths-of-the-evils-i-am-unleashing
-  # --task-search-path /root/workspace/mergekit/tasks \
+  # --task-search-path mergekit/tasks \

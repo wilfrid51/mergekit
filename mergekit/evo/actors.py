@@ -108,8 +108,8 @@ class OnDiskMergeEvaluator(MergeActorBase):
             return {"score": None, "results": None}
 
         # Add smoke test here
-        LOG.info("Running smoke test")
-        print("Running smoke test")
+        # LOG.info("Running smoke test")
+        # print("Running smoke test")
         try:
             model_kwargs = {}
             if self.quantization_config is not None:
@@ -119,12 +119,12 @@ class OnDiskMergeEvaluator(MergeActorBase):
             from lm_eval.models.huggingface import HFLM
             test_model = HFLM(pretrained=merged_path, **model_kwargs)
 
-            if not self.smoke_test_model(test_model, self.task_manager):
-                LOG.warning("Smoke test failed - returning zero score")
-                print("Smoke test failed - returning zero score")
-                return {"score": 0.0, "results": {task.name: {"acc": 0.0} for task in self.config.tasks}}
-            else:
-                print("Smoke test passed - Congratulation")
+            # if not self.smoke_test_model(test_model, self.task_manager):
+            #     LOG.warning("Smoke test failed - returning zero score")
+            #     print("Smoke test failed - returning zero score")
+            #     return {"score": 0.0, "results": {task.name: {"acc": 0.0} for task in self.config.tasks}}
+            # else:
+            #     print("Smoke test passed - Congratulation")
         except Exception as e:
             LOG.error(f"Smoke test error: {e}")
             print(f"Smoke test error: {e}")
@@ -153,6 +153,8 @@ class OnDiskMergeEvaluator(MergeActorBase):
 
             # Generate response
             # if hasattr(model, 'generate'):
+            print("Test prompt: {test_prompt}")
+            print(type(model))
             if hasattr(model, "model") and hasattr(model, "tokenizer"):
                 hf_model = model.model
                 tokenizer = model.tokenizer

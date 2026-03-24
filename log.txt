@@ -1,0 +1,5 @@
+(8_w,16)-aCMA-ES (mu_w=4.8,w_1=32%) in dimension 72 (seed=418099, Tue Mar 24 01:38:21 2026)
+Received 16 genotypes
+[36m(OnDiskMergeEvaluator pid=141499)[0m Merging model
+[36m(OnDiskMergeEvaluator pid=141499)[0m Model merged to /teamspace/studios/this_studio/mergekit/evolve_storage/merged/mergedub33bafi
+[36m(OnDiskMergeEvaluator pid=141499)[0m Merging model
