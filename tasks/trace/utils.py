@@ -8,6 +8,8 @@ class TraceVerifier:
 
     def verify(self, extra: dict, response: str) -> int:
         ground_truth = extra.get("ground_truth", "")
+        print(f"{'='*50} GROUND_TRUTH {'='*50}\n{ground_truth}")
+        print(f"{'='*50}   RESPONSE {'='*50}\n{response}")
         cleaned_prediction = self.clean_llm_prediction(response)
 
         score = 1.0 if self.compare_outputs(ground_truth, cleaned_prediction) else 0.0
@@ -44,8 +46,9 @@ class TraceVerifier:
         return normalize(expected) == normalize(actual)
 
 
-def process_results(doc, results, extra):
+def check_results(doc, results):
     prediction = results[0] if results else ""
+    extra = doc["extra"]
 
     verifier = TraceVerifier()
 

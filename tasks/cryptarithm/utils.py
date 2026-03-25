@@ -122,7 +122,6 @@ class CryptarithmVerifier:
 
         return ""
 
-
     def _parse_equation(self, equation: str) -> Optional[tuple[List[int], List[str]]]:
         """Parse numeric equation into numbers and operators"""
         # Normalize spaces
@@ -308,8 +307,9 @@ class CryptarithmVerifier:
         return True
 
 
-def process_results(doc, results, game_data):
+def check_results(doc, results):
     prediction = results[0] if results else ""
+    game_data = doc["game_data"]
 
     verifier = CryptarithmVerifier()
 

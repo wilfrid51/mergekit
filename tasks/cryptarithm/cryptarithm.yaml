@@ -5,9 +5,9 @@ validation_split: train
 process_docs: !function utils.preprocess
 doc_to_text: "{{prompt}}"
 doc_to_target: "{{game_data}}"
-process_results: !function utils.process_results
+process_results: !function utils.check_results
 generation_kwargs:
-  max_gen_toks: 1024
+  max_gen_toks: 16384
   temperature: 0.0
   until: "<|endoftext|>"
 metric_list:
