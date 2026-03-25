@@ -20,6 +20,7 @@ import requests
 from transformers.utils import is_flash_attn_2_available
 
 from mergekit.architecture.base import ConfiguredModelArchitecture
+from .llm_chat import llm_chat
 
 try:
     import vllm
@@ -122,12 +123,12 @@ class OnDiskMergeEvaluator(MergeActorBase):
             from lm_eval.models.huggingface import HFLM
             test_model = HFLM(pretrained=merged_path, **model_kwargs)
 
-            # if not self.smoke_test_model(test_model, self.task_manager):
-            #     LOG.warning("Smoke test failed - returning zero score")
-            #     print("Smoke test failed - returning zero score")
-            #     return {"score": 0.0, "results": {task.name: {"acc": 0.0} for task in self.config.tasks}}
-            # else:
-            print("Smoke test passed - Congratulation")
+            if not self.smoke_test_model(test_model, self.task_manager):
+                LOG.warning("Smoke test failed - returning zero score")
+                print("Smoke test failed - returning zero score")
+                # return {"score": 0.0, "results": {task.name: {"acc": 0.0} for task in self.config.tasks}}
+            else:
+                print("Smoke test passed - Congratulation")
         except Exception as e:
             LOG.error(f"Smoke test error: {e}")
             print(f"Smoke test error: {e}")
@@ -243,15 +244,20 @@ class OnDiskMergeEvaluator(MergeActorBase):
         """
 
         # Step 1: Generate answer
-        answer = self.call_model(
-            api_url=api_url,
-            api_key=api_key,
+        print(f"{'='*50} Check Hallucination {'='*50}\n")
+        answer = llm_chat(
+            messages = [
+                {"role": "system", "content": "Answer the user's question using the provided knowledge if available."},
+                {"role": "user", "content": user_prompt}
+            ],
             model=model,
-            prompt=user_prompt,
-            system_prompt="Answer the user's question using the provided knowledge if available.",
-            temperature=0.0,
+            base_url=api_url,
+            api_key=api_key,
             timeout=timeout,
+            temperature=0.0,
         )
+        answer = answer.content
+        print(f"{'='*50} Answer from model {'='*50}\n{answer}")
 
         # Step 2: Verify answer against reference context
         verifier_prompt = f"""
@@ -276,15 +282,20 @@ ANSWER:
 {answer}
 """.strip()
 
-        verdict = self.call_model(
-            api_url=api_url,
-            api_key=api_key,
+        verdict = llm_chat(
+            messages = [
+                {"role": "system", "content": "You are a strict verifier. Output only True or False."},
+                {"role": "user", "content": verifier_prompt}
+            ],
             model=model,
-            prompt=verifier_prompt,
-            system_prompt="You are a strict verifier. Output only True or False.",
-            temperature=0.0,
+            base_url=api_url,
+            api_key=api_key,
             timeout=timeout,
+            temperature=0.0,
         )
+        verdict = verdict.content
+        print(f"{'='*50} Verdict from model {'='*50}\n{verdict}")
+
 
         return verdict.strip().lower() == "true"
 
