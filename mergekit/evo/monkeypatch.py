@@ -99,15 +99,15 @@ def monkeypatch_lmeval_vllm():
 
 def monkeypatch_strip_thinking_tags():
     """Monkeypatch to strip <think>...</think> tags from model outputs before evaluation.
-    
+  
     This fixes issues where models generate reasoning chains but the evaluator expects
     just the final answer.
     """
     import re
-    
+  
     if hasattr(monkeypatch_strip_thinking_tags, "_patched"):
         return
-    
+  
     def _strip_thinking(value: str) -> str:
         """Remove <think>...</think> blocks and return the remaining text."""
         if not isinstance(value, str):
@@ -115,58 +115,74 @@ def monkeypatch_strip_thinking_tags():
         # Strip think tags and everything inside them
         value = re.sub(r'<think>.*?</think>', '', value, flags=re.DOTALL)
         return value.strip()
-    
+  
     # Patch datasets' encoding to strip thinking tags from string values
     # This catches the error point: trying to convert thinking-tagged output to int
     try:
         from datasets.features.features import encode_nested_example as original_encode_nested
         import datasets.features.features as features_module
-        
+      
         def patched_encode_nested_example(schema, obj, level=None):
             # Strip thinking tags from string objects before encoding
             if isinstance(obj, str):
                 obj = _strip_thinking(obj)
             return original_encode_nested(schema, obj, level)
-        
+      
         features_module.encode_nested_example = patched_encode_nested_example
     except (ImportError, AttributeError):
         pass
-    
+  
     # Also patch at the string encoding level to be safe
     try:
         from datasets.features.features import UTF8Feature
-        
+      
         # Store original encode_example if it's a method
         if hasattr(UTF8Feature, 'encode_example'):
             original_utf8_encode = UTF8Feature.encode_example
-            
+          
             def patched_utf8_encode(self, value):
                 if isinstance(value, str):
                     value = _strip_thinking(value)
                 return original_utf8_encode(self, value)
-            
+          
             UTF8Feature.encode_example = patched_utf8_encode
     except (ImportError, AttributeError):
         pass
-    
+  
     # Patch value encoding at the lowest level
     try:
         from datasets.features.features import Value
-        
+      
         if hasattr(Value, 'encode_example'):
             original_value_encode = Value.encode_example
-            
+          
             def patched_value_encode(self, value):
                 if isinstance(value, str):
                     value = _strip_thinking(value)
                 return original_value_encode(self, value)
-            
+          
             Value.encode_example = patched_value_encode
     except (ImportError, AttributeError):
         pass
-    
+  
     monkeypatch_strip_thinking_tags._patched = True
 
+
+def monkeypatch_qwen_tokenizer():
+    """Fix missing all_special_tokens_extended attribute in Qwen2Tokenizer."""
+    import transformers
+    from transformers import Qwen2Tokenizer
+    
+    if hasattr(Qwen2Tokenizer, "_mk_all_special_tokens_extended_patched"):
+        return
+    
+    def _get_all_special_tokens_extended(self):
+        # Fallback implementation
+        return self.all_special_tokens
+    
+    # Add the missing property
+    Qwen2Tokenizer.all_special_tokens_extended = property(_get_all_special_tokens_extended)
+    Qwen2Tokenizer._mk_all_special_tokens_extended_patched = True
 
 class NoInit:
     def __enter__(self):

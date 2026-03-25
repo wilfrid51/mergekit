@@ -1,6 +1,22 @@
-INFO 03-25 01:46:11 __init__.py:190] Automatically detected platform cuda.
-(8_w,16)-aCMA-ES (mu_w=4.8,w_1=32%) in dimension 72 (seed=485759, Wed Mar 25 01:46:21 2026)
+INFO 03-25 02:13:52 __init__.py:190] Automatically detected platform cuda.
+(8_w,16)-aCMA-ES (mu_w=4.8,w_1=32%) in dimension 72 (seed=454878, Wed Mar 25 02:14:02 2026)
 Received 16 genotypes
-[36m(pid=44008)[0m INFO 03-25 01:46:29 __init__.py:190] Automatically detected platform cuda.
-[36m(OnDiskMergeEvaluator pid=44008)[0m Merging model
-[36m(OnDiskMergeEvaluator pid=44008)[0m Test prompt: Tell me about yourself.
+[36m(pid=190655)[0m INFO 03-25 02:14:10 __init__.py:190] Automatically detected platform cuda.
+[36m(OnDiskMergeEvaluator pid=190655)[0m Merging model
+[36m(OnDiskMergeEvaluator pid=190655)[0m Smoke test passed - Congratulation
+[36m(OnDiskMergeEvaluator pid=190655)[0m Model merged to /teamspace/studios/this_studio/mergekit/evolve_storage/merged/mergedt5ee7myb
+[36m(OnDiskMergeEvaluator pid=190655)[0m INFO 03-25 02:14:53 config.py:542] This model supports multiple tasks: {'embed', 'score', 'generate', 'reward', 'classify'}. Defaulting to 'generate'.
+[36m(OnDiskMergeEvaluator pid=190655)[0m INFO 03-25 02:14:53 llm_engine.py:234] Initializing a V0 LLM engine (v0.7.2) with config: model='/teamspace/studios/this_studio/mergekit/evolve_storage/merged/mergedt5ee7myb', speculative_config=None, tokenizer='/teamspace/studios/this_studio/mergekit/evolve_storage/merged/mergedt5ee7myb', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, override_neuron_config=None, tokenizer_revision=None, trust_remote_code=False, dtype=torch.bfloat16, max_seq_len=4096, download_dir=None, load_format=LoadFormat.AUTO, tensor_parallel_size=1, pipeline_parallel_size=1, disable_custom_all_reduce=False, quantization=None, enforce_eager=False, kv_cache_dtype=auto,  device_config=cuda, decoding_config=DecodingConfig(guided_decoding_backend='xgrammar'), observability_config=ObservabilityConfig(otlp_traces_endpoint=None, collect_model_forward_time=False, collect_model_execute_time=False), seed=1234, served_model_name=/teamspace/studios/this_studio/mergekit/evolve_storage/merged/mergedt5ee7myb, num_scheduler_steps=1, multi_step_stream_outputs=True, enable_prefix_caching=False, chunked_prefill_enabled=False, use_async_output_proc=True, disable_mm_preprocessor_cache=False, mm_processor_kwargs=None, pooler_config=None, compilation_config={"splitting_ops":[],"compile_sizes":[],"cudagraph_capture_sizes":[256,248,240,232,224,216,208,200,192,184,176,168,160,152,144,136,128,120,112,104,96,88,80,72,64,56,48,40,32,24,16,8,4,2,1],"max_capture_size":256}, use_cached_outputs=False, 
+[36m(OnDiskMergeEvaluator pid=190655)[0m INFO 03-25 02:14:57 cuda.py:230] Using Flash Attention backend.
+[36m(OnDiskMergeEvaluator pid=190655)[0m INFO 03-25 02:14:57 model_runner.py:1110] Starting to load model /teamspace/studios/this_studio/mergekit/evolve_storage/merged/mergedt5ee7myb...
+[36m(OnDiskMergeEvaluator pid=190655)[0m WARNING 03-25 02:14:57 utils.py:69] Qwen3ForCausalLM has no vLLM implementation, falling back to Transformers implementation. Some features may not be supported and performance may not be optimal.
+[36m(OnDiskMergeEvaluator pid=190655)[0m INFO 03-25 02:14:57 transformers.py:132] Using Transformers backend.
+[36m(OnDiskMergeEvaluator pid=190655)[0m INFO 03-25 02:15:02 model_runner.py:1115] Loading model weights took 7.4925 GB
+[36m(OnDiskMergeEvaluator pid=190655)[0m INFO 03-25 02:15:03 worker.py:267] Memory profiling takes 0.96 seconds
+[36m(OnDiskMergeEvaluator pid=190655)[0m INFO 03-25 02:15:03 worker.py:267] the current vLLM instance can use total_gpu_memory (79.25GiB) x gpu_memory_utilization (0.80) = 63.40GiB
+[36m(OnDiskMergeEvaluator pid=190655)[0m INFO 03-25 02:15:03 worker.py:267] model weights take 7.49GiB; non_torch_memory takes 0.02GiB; PyTorch activation peak memory takes 1.40GiB; the rest of the memory reserved for KV Cache is 54.49GiB.
+[36m(OnDiskMergeEvaluator pid=190655)[0m INFO 03-25 02:15:03 executor_base.py:110] # CUDA blocks: 24797, # CPU blocks: 1820
+[36m(OnDiskMergeEvaluator pid=190655)[0m INFO 03-25 02:15:03 executor_base.py:115] Maximum concurrency for 4096 tokens per request: 96.86x
+[36m(OnDiskMergeEvaluator pid=190655)[0m INFO 03-25 02:15:06 model_runner.py:1434] Capturing cudagraphs for decoding. This may lead to unexpected consequences if the model is not static. To run the model in eager mode, set 'enforce_eager=True' or use '--enforce-eager' in the CLI. If out-of-memory error occurs during cudagraph capture, consider decreasing `gpu_memory_utilization` or switching to eager mode. You can also reduce the `max_num_seqs` as needed to decrease memory usage.
+[36m(OnDiskMergeEvaluator pid=190655)[0m INFO 03-25 02:15:38 model_runner.py:1562] Graph capturing finished in 32 secs, took 0.61 GiB
+[36m(OnDiskMergeEvaluator pid=190655)[0m INFO 03-25 02:15:38 llm_engine.py:431] init engine (profile, create kv cache, warmup model) took 36.76 seconds

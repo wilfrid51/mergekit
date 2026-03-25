@@ -4,7 +4,6 @@ export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 mergekit-evolve \
   --storage-path ./evolve_storage \
   examples/evolve_config.yml \
-  --batch-size 4 \
   --vllm \
   --task-search-path tasks \
   --i-understand-the-depths-of-the-evils-i-am-unleashing
