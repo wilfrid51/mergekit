@@ -27,7 +27,7 @@ tasks:
     weight: 1.0
     metric: accuracy,none
 
-limit: 5
+limit: 1
 num_fewshot: 0
 apply_chat_template: true
 fewshot_as_multiturn: true

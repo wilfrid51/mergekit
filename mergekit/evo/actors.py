@@ -16,6 +16,7 @@ import ray.util.queue
 import ray.util.scheduling_strategies
 import torch
 import transformers
+import requests
 from transformers.utils import is_flash_attn_2_available
 
 from mergekit.architecture.base import ConfiguredModelArchitecture
@@ -119,12 +120,12 @@ class OnDiskMergeEvaluator(MergeActorBase):
             from lm_eval.models.huggingface import HFLM
             test_model = HFLM(pretrained=merged_path, **model_kwargs)
 
-            # if not self.smoke_test_model(test_model, self.task_manager):
-            #     LOG.warning("Smoke test failed - returning zero score")
-            #     print("Smoke test failed - returning zero score")
-            #     return {"score": 0.0, "results": {task.name: {"acc": 0.0} for task in self.config.tasks}}
-            # else:
-            #     print("Smoke test passed - Congratulation")
+            if not self.smoke_test_model(test_model, self.task_manager):
+                LOG.warning("Smoke test failed - returning zero score")
+                print("Smoke test failed - returning zero score")
+                return {"score": 0.0, "results": {task.name: {"acc": 0.0} for task in self.config.tasks}}
+            else:
+                print("Smoke test passed - Congratulation")
         except Exception as e:
             LOG.error(f"Smoke test error: {e}")
             print(f"Smoke test error: {e}")
@@ -153,8 +154,7 @@ class OnDiskMergeEvaluator(MergeActorBase):
 
             # Generate response
             # if hasattr(model, 'generate'):
-            print("Test prompt: {test_prompt}")
-            print(type(model))
+            print(f"Test prompt: {test_prompt}")
             if hasattr(model, "model") and hasattr(model, "tokenizer"):
                 hf_model = model.model
                 tokenizer = model.tokenizer
@@ -188,19 +188,138 @@ class OnDiskMergeEvaluator(MergeActorBase):
             logging.warning(f"Smoke test failed: {e}")
             return False
 
+    def call_model(
+        self,
+        api_url: str,
+        api_key: str,
+        model: str,
+        prompt: str,
+        system_prompt: str = "You are a helpful assistant.",
+        temperature: float = 0.0,
+        timeout: int = 60,
+    ) -> str:
+        """
+        Sends a prompt to the model inference API and returns the text response.
+        Assumes an OpenAI-compatible chat completions endpoint.
+        """
+
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        }
+
+        payload = {
+            "model": model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": prompt},
+            ],
+            "temperature": temperature,
+        }
+
+        response = requests.post(api_url, headers=headers, json=payload, timeout=timeout)
+        response.raise_for_status()
+
+        data = response.json()
+
+        return data["choices"][0]["message"]["content"].strip()
+
+
+    def check_hallucination(
+        self,
+        api_url: str,
+        api_key: str,
+        model: str,
+        user_prompt: str,
+        reference_context: str,
+        timeout: int = 60,
+    ) -> bool:
+        """
+        1. Gets the model's answer for the user prompt
+        2. Verifies whether that answer is fully supported by the reference_context
+        3. Returns only True or False
+        """
+
+        # Step 1: Generate answer
+        answer = self.call_model(
+            api_url=api_url,
+            api_key=api_key,
+            model=model,
+            prompt=user_prompt,
+            system_prompt="Answer the user's question using the provided knowledge if available.",
+            temperature=0.0,
+            timeout=timeout,
+        )
+
+        # Step 2: Verify answer against reference context
+        verifier_prompt = f"""
+You are a strict hallucination checker.
+
+Task:
+Determine whether the ANSWER is fully supported by the REFERENCE CONTEXT.
+
+Rules:
+- Return only True or False.
+- Return True only if every factual claim in ANSWER is supported by REFERENCE CONTEXT.
+- Return False if ANSWER contains any unsupported, invented, guessed, or extra factual claim.
+- Do not explain anything.
+
+USER QUESTION:
+{user_prompt}
+
+REFERENCE CONTEXT:
+{reference_context}
+
+ANSWER:
+{answer}
+""".strip()
+
+        verdict = self.call_model(
+            api_url=api_url,
+            api_key=api_key,
+            model=model,
+            prompt=verifier_prompt,
+            system_prompt="You are a strict verifier. Output only True or False.",
+            temperature=0.0,
+            timeout=timeout,
+        )
+
+        return verdict.strip().lower() == "true"
+
     def detect_rambling_simple(self, text):
         """Simple detection of rambling/repetition."""
+        API_URL = "https://llm.chutes.ai/v1/"
+        API_KEY = "cpk_1e70d6c73fb64442a65445288a3fd45f.b7c9747248fb5554814aba979dad901d.OoMcWdftO7mvgqQCwkYtlbkh0qBqw6ma"
+        MODEL_NAME = "moonshotai/Kimi-K2.5-TEE"
+
+        question = "Who discovered penicillin and in what year?"
+        context = """
+        Penicillin was discovered by Alexander Fleming in 1928.
+        """
+
+        result = self.check_hallucination(
+            api_url=API_URL,
+            api_key=API_KEY,
+            model=MODEL_NAME,
+            user_prompt=question,
+            reference_context=context,
+        )
+
+        print(f"Model's response is {result}")  # True or False
+        if result.lower() == "true":
+            return True
+        return False
         # Check for excessive repetition
-        words = text.split()
-        rambling_cnt = 0
-        if len(words) > 20:
-            # Count repeated phrases
-            for i in range(len(words) - 10):
-                phrase = ' '.join(words[i:i+10])
-                if text.count(phrase) > 3:
-                    rambling_cnt += 1
-                    if rambling_cnt > 3:
-                        return True
+        # words = text.split()
+        # rambling_cnt = 0
+        # if len(words) > 20:
+        #     # Count repeated phrases
+        #     for i in range(len(words) - 10):
+        #         phrase = ' '.join(words[i:i+10])
+        #         if text.count(phrase) > 3:
+        #             rambling_cnt += 1
+        #             if rambling_cnt > 3:
+        #                 return True
         return False
 
 
