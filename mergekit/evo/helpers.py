@@ -74,10 +74,11 @@ def evaluate_model(
             **(model_kwargs or {}),
         }
         if vllm:
-            model_args["gpu_memory_utilization"] = 0.8
+            model_args["gpu_memory_utilization"] = 0.7
             model_args["tensor_parallel_size"] = 1
-            model_args["batch_size"] = "auto"
-            model_args["max_model_len"] = 4096
+            model_args["batch_size"] = 4
+            model_args["max_model_len"] = 40960
+            model_args["enforce_eager"] = True
         else:
             model_args["use_cache"] = True
 
