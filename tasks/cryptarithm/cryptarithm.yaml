@@ -7,7 +7,7 @@ doc_to_text: "{{prompt}}"
 doc_to_target: "{{game_data}}"
 process_results: !function utils.process_results
 generation_kwargs:
-  max_gen_toks: 10240
+  max_gen_toks: 1024
   temperature: 0.0
   until: "<|endoftext|>"
 metric_list:

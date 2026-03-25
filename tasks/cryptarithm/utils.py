@@ -20,7 +20,9 @@ class CryptarithmVerifier:
         """
         try:
             # Extract answer from response
+            print(f"{'='*100}\n{test_solution}")
             test_answer = self.extract_answer(test_solution)
+            print(f"{'='*100}\n{test_answer}")
 
             if not test_answer:
                 return False
@@ -33,7 +35,7 @@ class CryptarithmVerifier:
             numbers, operators = parsed
 
             # Verify equation is mathematically correct
-            if not self._verify_equation(numbers, operators, generator):
+            if not self._verify_equation(numbers, operators):
                 return False
 
             # Extract letter words and operators from original question
