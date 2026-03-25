@@ -30,7 +30,7 @@ class ChatResult:
 
     Supports tuple unpacking for backward compatibility::
 
-        content, usage = llm_chat(...)          # 2-tuple
+        content, usage = await llm_chat(...)          # 2-tuple
         content, reasoning, usage = result             # 3-fields via iter
     """
 
@@ -38,7 +38,7 @@ class ChatResult:
     reasoning: Optional[str] = None
     usage: Optional[Dict[str, Any]] = None
 
-    # Allow ``content, usage = llm_chat(...)`` to keep working for
+    # Allow ``content, usage = await llm_chat(...)`` to keep working for
     # existing callers that expect a 2-tuple (content, usage).
     def __iter__(self) -> Iterator:
         return iter((self.content, self.usage))
@@ -123,7 +123,7 @@ _RETRYABLE_EXCEPTIONS = (
 )
 
 
-def llm_chat(
+async def llm_chat(
     *,
     messages: List[Dict[str, Any]],
     model: str,
@@ -184,7 +184,7 @@ def llm_chat(
         )
 
     try:
-        return _chat_with_retries(
+        return await _chat_with_retries(
             client=client,
             model=model,
             messages=messages,
@@ -198,14 +198,14 @@ def llm_chat(
         )
     finally:
         if own_client:
-            client.close()
+            await client.close()
 
 
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
 
-def _chat_with_retries(
+async def _chat_with_retries(
     *,
     client: openai.AsyncOpenAI,
     model: str,
@@ -236,9 +236,9 @@ def _chat_with_retries(
     for attempt in range(attempts):
         try:
             if stream:
-                result = _stream_chat(client, params, chunk_timeout, max_chunks)
+                result = await _stream_chat(client, params, chunk_timeout, max_chunks)
             else:
-                result = _non_stream_chat(client, params)
+                result = await _non_stream_chat(client, params)
 
             content = result.content
             if strip_think_tags and content:
@@ -255,7 +255,7 @@ def _chat_with_retries(
         except _RETRYABLE_EXCEPTIONS as exc:
             last_exc = exc
             if attempt < attempts - 1:
-                asyncio.sleep(min(2 ** attempt, 32))
+                await asyncio.sleep(min(2 ** attempt, 32))
             continue
 
         except openai.BadRequestError as exc:
@@ -268,7 +268,7 @@ def _chat_with_retries(
             if exc.status_code >= 500:
                 last_exc = exc
                 if attempt < attempts - 1:
-                    asyncio.sleep(min(2 ** attempt, 32))
+                    await asyncio.sleep(min(2 ** attempt, 32))
                 continue
             raise ValueError(f"API error {exc.status_code}: {exc.message}") from exc
 
@@ -276,7 +276,7 @@ def _chat_with_retries(
     raise ValueError(f"API call failed after {attempts} attempts: {last_exc}")
 
 
-def _stream_chat(
+async def _stream_chat(
     client: openai.AsyncOpenAI,
     params: Dict[str, Any],
     chunk_timeout: float,
@@ -284,7 +284,7 @@ def _stream_chat(
 ) -> ChatResult:
     """Execute a streaming chat completion."""
     stream_params = {**params, "stream_options": {"include_usage": True}}
-    stream = client.chat.completions.create(**stream_params)
+    stream = await client.chat.completions.create(**stream_params)
 
     content_parts: List[str] = []
     reasoning_parts: List[str] = []
@@ -295,7 +295,7 @@ def _stream_chat(
         chunk_iter = stream.__aiter__()
         while True:
             try:
-                chunk = asyncio.wait_for(chunk_iter.__anext__(), timeout=chunk_timeout)
+                chunk = await asyncio.wait_for(chunk_iter.__anext__(), timeout=chunk_timeout)
             except StopAsyncIteration:
                 break
             except asyncio.TimeoutError:
@@ -319,7 +319,7 @@ def _stream_chat(
     finally:
         # Best-effort stream close with timeout
         try:
-            asyncio.wait_for(stream.response.aclose(), timeout=5.0)
+            await asyncio.wait_for(stream.response.aclose(), timeout=5.0)
         except Exception:
             pass
 
@@ -328,12 +328,12 @@ def _stream_chat(
     return ChatResult(content=content, reasoning=reasoning, usage=usage)
 
 
-def _non_stream_chat(
+async def _non_stream_chat(
     client: openai.AsyncOpenAI,
     params: Dict[str, Any],
 ) -> ChatResult:
     """Execute a non-streaming chat completion."""
-    resp = client.chat.completions.create(**params)
+    resp = await client.chat.completions.create(**params)
     usage = resp.usage.model_dump() if resp.usage else None
 
     if not resp.choices:

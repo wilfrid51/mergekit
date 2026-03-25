@@ -21,6 +21,7 @@ from transformers.utils import is_flash_attn_2_available
 
 from mergekit.architecture.base import ConfiguredModelArchitecture
 from .llm_chat import llm_chat
+import asyncio
 
 try:
     import vllm
@@ -123,6 +124,8 @@ class OnDiskMergeEvaluator(MergeActorBase):
             from lm_eval.models.huggingface import HFLM
             test_model = HFLM(pretrained=merged_path, **model_kwargs)
 
+            # if True:  The Model is nice
+            # if False: The model is Bad
             if not self.smoke_test_model(test_model, self.task_manager):
                 LOG.warning("Smoke test failed - returning zero score")
                 print("Smoke test failed - returning zero score")
@@ -153,7 +156,9 @@ class OnDiskMergeEvaluator(MergeActorBase):
         """Quick test to check if model produces coherent responses."""
         try:
             # Simple smoke test prompt
-            test_prompt = "Tell me about yourself."
+            system_prompt = "Answer the user's question using the provided knowledge if available."
+            user_prompt = "Who discovered penicillin and in what year?"
+            test_prompt = f"<|im_start|>system\n{system_prompt}<|im_end|>\n<|im_start|>user\n{user_prompt}<|im_end|>"
 
             # Generate response
             # if hasattr(model, 'generate'):
@@ -180,7 +185,9 @@ class OnDiskMergeEvaluator(MergeActorBase):
             print(f"Current Merged model's response is : {response[:1000]}")
 
             # Check for rambling / repetition
-            if self.detect_rambling_simple(response):
+            # if True:  The Model is nice
+            # if False: The model is Bad
+            if not self.detect_rambling_simple(response):
                 return False
 
             if response == "Model response test failed":
@@ -234,6 +241,7 @@ class OnDiskMergeEvaluator(MergeActorBase):
         api_key: str,
         model: str,
         user_prompt: str,
+        answer: str,
         reference_context: str,
         timeout: int = 60,
     ) -> bool:
@@ -244,33 +252,21 @@ class OnDiskMergeEvaluator(MergeActorBase):
         """
 
         # Step 1: Generate answer
-        print(f"{'='*50} Check Hallucination {'='*50}\n")
-        answer = llm_chat(
-            messages = [
-                {"role": "system", "content": "Answer the user's question using the provided knowledge if available."},
-                {"role": "user", "content": user_prompt}
-            ],
-            model=model,
-            base_url=api_url,
-            api_key=api_key,
-            timeout=timeout,
-            temperature=0.0,
-        )
-        answer = answer.content
         print(f"{'='*50} Answer from model {'='*50}\n{answer}")
 
         # Step 2: Verify answer against reference context
         verifier_prompt = f"""
 You are a strict hallucination checker.
 
-Task:
-Determine whether the ANSWER is fully supported by the REFERENCE CONTEXT.
+Task: Evaluate the ANSWER using the REFERENCE CONTEXT.
+
+Output:
+- Correct Answer: True or False
+- Contains Hallucination: True or False
 
 Rules:
-- Return only True or False.
-- Return True only if every factual claim in ANSWER is supported by REFERENCE CONTEXT.
-- Return False if ANSWER contains any unsupported, invented, guessed, or extra factual claim.
-- Do not explain anything.
+- "Correct Answer" = whether the question is answered correctly.
+- "Contains Hallucination" = whether ANY part of the answer includes unsupported or incorrect information.
 
 USER QUESTION:
 {user_prompt}
@@ -282,22 +278,32 @@ ANSWER:
 {answer}
 """.strip()
 
-        verdict = llm_chat(
-            messages = [
-                {"role": "system", "content": "You are a strict verifier. Output only True or False."},
-                {"role": "user", "content": verifier_prompt}
-            ],
-            model=model,
-            base_url=api_url,
-            api_key=api_key,
-            timeout=timeout,
-            temperature=0.0,
+        verdict = asyncio.run(
+            llm_chat(
+                messages = [
+                    {"role": "system", "content": "You are a strict verifier. Output only True or False."},
+                    {"role": "user", "content": verifier_prompt}
+                ],
+                model=model,
+                base_url=api_url,
+                api_key=api_key,
+                timeout=timeout,
+                temperature=0.0,
+            )
         )
-        verdict = verdict.content
+        verdict = str(verdict.content)
         print(f"{'='*50} Verdict from model {'='*50}\n{verdict}")
 
+        for text in verdict.split("\n"):
+            if text.startswith("Correct Answer:"):
+                text = text.split(": ")[-1]
+                print(f"Is this correct Answer? : {text}")
+                return text.strip().lower() == "true"
+            if text.startswith("Contains Hallucination:"):
+                text = text.split(": ")[-1]
+                print(f"Is this hallunicate? : {text}")
 
-        return verdict.strip().lower() == "true"
+        return False
 
     def detect_rambling_simple(self, text):
         """Simple detection of rambling/repetition."""
@@ -310,30 +316,17 @@ ANSWER:
         Penicillin was discovered by Alexander Fleming in 1928.
         """
 
+        print(f"{'='*50} Check Hallucination {'='*50}")
         result = self.check_hallucination(
             api_url=API_URL,
             api_key=API_KEY,
             model=MODEL_NAME,
             user_prompt=question,
+            answer=text,
             reference_context=context,
         )
 
-        print(f"Model's response is {result}")  # True or False
-        if result.lower() == "true":
-            return True
-        return False
-        # Check for excessive repetition
-        # words = text.split()
-        # rambling_cnt = 0
-        # if len(words) > 20:
-        #     # Count repeated phrases
-        #     for i in range(len(words) - 10):
-        #         phrase = ' '.join(words[i:i+10])
-        #         if text.count(phrase) > 3:
-        #             rambling_cnt += 1
-        #             if rambling_cnt > 3:
-        #                 return True
-        return False
+        return result
 
 
 @ray.remote(num_cpus=1, num_gpus=1)
