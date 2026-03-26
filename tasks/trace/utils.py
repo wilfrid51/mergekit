@@ -51,8 +51,11 @@ def check_results(doc, results):
     extra = doc["extra"]
 
     verifier = TraceVerifier()
+    score = verifier.verify(extra, prediction)
 
-    return {"accuracy": verifier.verify(extra, prediction)}
+    print(f"{'='*100}\nCryptarithm Score: {score} - {len(prediction) * 0.00001} = {score - len(prediction) * 0.00001}")
+    
+    return {"accuracy": score - len(prediction) * 0.00001}
 
 def preprocess(dataset: datasets.Dataset) -> datasets.Dataset:
     def _process_doc(doc):

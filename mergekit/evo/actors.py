@@ -17,6 +17,7 @@ import ray.util.scheduling_strategies
 import torch
 import transformers
 import requests
+import hashlib
 from transformers.utils import is_flash_attn_2_available
 
 from mergekit.architecture.base import ConfiguredModelArchitecture
@@ -467,6 +468,12 @@ class InMemoryMergeEvaluator(MergeActorBase):
         except InvalidGenotypeError as e:
             LOG.error("Invalid genotype", exc_info=e)
             return {"score": None, "results": None}
+
+        # Save config when merge starts
+        config_id = hashlib.md5(genotype.numpy().tobytes()).hexdigest()[:8]
+        config_path = os.path.join(self.model_storage_path, f"merge_config_{config_id}.yaml")
+        with open(config_path, "w") as f:
+            f.write(config.to_yaml())
 
         self._maybe_init_model(config)
 

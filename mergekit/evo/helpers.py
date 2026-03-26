@@ -15,6 +15,8 @@ import ray
 import ray.util.queue
 import ray.util.scheduling_strategies
 import torch
+import hashlib
+from datetime import datetime
 
 from mergekit.evo.config import TaskConfiguration
 from mergekit.evo.genome import InvalidGenotypeError, ModelGenome
@@ -74,10 +76,10 @@ def evaluate_model(
             **(model_kwargs or {}),
         }
         if vllm:
-            model_args["gpu_memory_utilization"] = 0.7
+            model_args["gpu_memory_utilization"] = 0.75
             model_args["tensor_parallel_size"] = 1
             model_args["batch_size"] = 7
-            model_args["max_model_len"] = 40960
+            model_args["max_model_len"] = 20480
             model_args["enforce_eager"] = True
         else:
             model_args["use_cache"] = True
@@ -112,6 +114,14 @@ def merge_model(
     except InvalidGenotypeError as e:
         logging.error("Invalid genotype", exc_info=e)
         return None
+
+    # Save config when merge starts
+    config_id = datetime.now().strftime("%Y%m%d_%H%M%S")
+    config_path = os.path.join(model_storage_path, f"merge_config_{config_id}.yaml")
+    os.makedirs(model_storage_path, exist_ok=True)
+    with open(config_path, "w") as f:
+        f.write(cfg.to_yaml())
+
     os.makedirs(model_storage_path, exist_ok=True)
     res = tempfile.mkdtemp(prefix="merged", dir=model_storage_path)
     run_merge(cfg, out_path=res, options=merge_options)

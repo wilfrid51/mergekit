@@ -20,7 +20,7 @@ class CryptarithmVerifier:
         """
         try:
             # Extract answer from response
-            print(f"{'='*100}\n{test_solution}")
+            print(f"{'='*100}\n{test_solution[:300]}")
             test_answer = self.extract_answer(test_solution)
             print(f"{'='*100}\n{test_answer}")
 
@@ -312,8 +312,10 @@ def check_results(doc, results):
     game_data = doc["game_data"]
 
     verifier = CryptarithmVerifier()
+    score = verifier.verify(game_dta, prediction)
+    print(f"{'='*100}\nCryptarithm Score: {score} - {len(prediction) * 0.00001} = {score - len(prediction) * 0.00001}")
 
-    return {"accuracy": verifier.verify(game_data, prediction)}
+    return {"accuracy": score - len(prediction) * 0.00001}
 
 def preprocess(dataset: datasets.Dataset) -> datasets.Dataset:
     def _process_doc(doc):
