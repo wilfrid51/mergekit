@@ -312,7 +312,7 @@ def check_results(doc, results):
     game_data = doc["game_data"]
 
     verifier = CryptarithmVerifier()
-    score = verifier.verify(game_dta, prediction)
+    score = verifier.verify(game_data, prediction)
     print(f"{'='*100}\nCryptarithm Score: {score} - {len(prediction) * 0.00001} = {score - len(prediction) * 0.00001}")
 
     return {"accuracy": score - len(prediction) * 0.00001}
