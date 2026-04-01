@@ -1,13 +1,13 @@
 genome:
   models:
-    # - EdmondMillion/affine-28-5CSriXZUwkoqdKBF4kqgRPBgrRiyPbLEo6TBaR3rW3u5qo4T
-    # - vera6/affine-5GEY63hvpsKAELBtz64a5Xa7cdsEUdLqMK3JEdxfoQ1i1GqK
-    - jeff4000/4b_1
-    - jeff4000/4b_2
+    - EdmondMillion/affine-28-5CSriXZUwkoqdKBF4kqgRPBgrRiyPbLEo6TBaR3rW3u5qo4T
+    - vera6/affine-5GEY63hvpsKAELBtz64a5Xa7cdsEUdLqMK3JEdxfoQ1i1GqK
+    # - jeff4000/4b_1
+    # - jeff4000/4b_2
   merge_method: ties
-  # base_model: Qwen/Qwen3-32B
-  base_model: Qwen/Qwen3-4B
-  layer_granularity: 6
+  base_model: Qwen/Qwen3-32B
+  # base_model: Qwen/Qwen3-4B
+  layer_granularity: 8
   normalize: true
   filters:
     - mlp
@@ -15,26 +15,32 @@ genome:
 
 
 tasks:
-  # - name: webqs
-  #   weight: 1.0
-  # - name: humaneval
-  #   weight: 1.0
-      # metric: "pass@1,none"
-  # - name: truthfulqa
-  #   wiehgt: 1.0
-  # - name: asdiv
-  #   weight: 1.0
-  # - name: coqa
-  #   weight: 1.0
-  #   metric: "em,none"
-  # - name: coqa
-  #   weight: 1.0
-  #   metric: "f1,none"
-  # - name: fda
-  #   weight: 1.0
-  #   metric: "contains,none"
+  - name: webqs
+    weight: 1.0
+    metric: "exact_match,none"
+  - name: humaneval
+    weight: 1.0
+    metric: "pass@1,none"
+  - name: asdiv
+    wiehgt: 1.0
+  - name: metabench_gsm8k
+    weight: 1.0
+    metric: "exact_match,flexible-extract"
+  - name: coqa
+    weight: 1.0
+    metric: "em,none"
+  - name: coqa
+    weight: 1.0
+    metric: "f1,none"
+  - name: fda
+    weight: 1.0
+    metric: "contains,none"
   - name: drop
-    weight: 10.0
+    weight: 5.0
+    metric: "f1,none"
+  - name: drop
+    weight: 5.0
+    metric: "em,none"
 
 num_fewshot: 0
 apply_chat_template: true

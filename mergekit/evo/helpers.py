@@ -77,7 +77,7 @@ def evaluate_model(
             **(model_kwargs or {}),
         }
         if vllm:
-            model_args["gpu_memory_utilization"] = 0.95
+            model_args["gpu_memory_utilization"] = 0.7
             model_args["tensor_parallel_size"] = 1
             model_args["batch_size"] = "auto"
             model_args["max_model_len"] = 40960
