@@ -1,0 +1,271 @@
+base_model: Qwen/Qwen3-32B
+dtype: bfloat16
+merge_method: ties
+parameters:
+  int8_mask: 1.0
+  normalize: 1.0
+slices:
+- sources:
+  - layer_range: [0, 8]
+    model: top-50000/affine-1
+    parameters:
+      density:
+      - filter: mlp
+        value: 1.0
+      - filter: self_attn
+        value: 1.0
+      - value: 1.0
+      weight:
+      - filter: mlp
+        value: 0.7267999550775389
+      - filter: self_attn
+        value: 0.862329498411414
+      - value: 0.26926603746571287
+  - layer_range: [0, 8]
+    model: vera6/affine-5GEY63hvpsKAELBtz64a5Xa7cdsEUdLqMK3JEdxfoQ1i1GqK
+    parameters:
+      density:
+      - filter: mlp
+        value: 0.8540139819500219
+      - filter: self_attn
+        value: 1.0
+      - value: 1.0
+      weight:
+      - filter: mlp
+        value: 0.6061620553870293
+      - filter: self_attn
+        value: 0.43152173558560736
+      - value: 0.5521972026325441
+  - layer_range: [0, 8]
+    model: Qwen/Qwen3-32B
+- sources:
+  - layer_range: [8, 16]
+    model: top-50000/affine-1
+    parameters:
+      density:
+      - filter: mlp
+        value: 0.762606737652979
+      - filter: self_attn
+        value: 0.8740367240305853
+      - value: 0.6415122252732723
+      weight:
+      - filter: mlp
+        value: 0.42306441005165
+      - filter: self_attn
+        value: 0.49950296252800797
+      - value: 0.2611438912461651
+  - layer_range: [8, 16]
+    model: vera6/affine-5GEY63hvpsKAELBtz64a5Xa7cdsEUdLqMK3JEdxfoQ1i1GqK
+    parameters:
+      density:
+      - filter: mlp
+        value: 0.7942406420615031
+      - filter: self_attn
+        value: 0.8466629629062725
+      - value: 0.7549022293182905
+      weight:
+      - filter: mlp
+        value: 0.4360308494237637
+      - filter: self_attn
+        value: 0.5304679870461786
+      - value: 0.44855747874415025
+  - layer_range: [8, 16]
+    model: Qwen/Qwen3-32B
+- sources:
+  - layer_range: [16, 24]
+    model: top-50000/affine-1
+    parameters:
+      density:
+      - filter: mlp
+        value: 0.8361433351198192
+      - filter: self_attn
+        value: 1.0
+      - value: 1.0
+      weight:
+      - filter: mlp
+        value: 0.641901048713615
+      - filter: self_attn
+        value: 0.32176538426862544
+      - value: 0.3539074788190393
+  - layer_range: [16, 24]
+    model: vera6/affine-5GEY63hvpsKAELBtz64a5Xa7cdsEUdLqMK3JEdxfoQ1i1GqK
+    parameters:
+      density:
+      - filter: mlp
+        value: 1.0
+      - filter: self_attn
+        value: 1.0
+      - value: 1.0
+      weight:
+      - filter: mlp
+        value: 0.4474586412908006
+      - filter: self_attn
+        value: 0.5811472395588659
+      - value: 0.5202196924771645
+  - layer_range: [16, 24]
+    model: Qwen/Qwen3-32B
+- sources:
+  - layer_range: [24, 32]
+    model: top-50000/affine-1
+    parameters:
+      density:
+      - filter: mlp
+        value: 1.0
+      - filter: self_attn
+        value: 0.9018973811874321
+      - value: 1.0
+      weight:
+      - filter: mlp
+        value: 0.23199190365720407
+      - filter: self_attn
+        value: 0.15545775850538895
+      - value: 0.3333667240492131
+  - layer_range: [24, 32]
+    model: vera6/affine-5GEY63hvpsKAELBtz64a5Xa7cdsEUdLqMK3JEdxfoQ1i1GqK
+    parameters:
+      density:
+      - filter: mlp
+        value: 1.0
+      - filter: self_attn
+        value: 0.6633533275963311
+      - value: 0.9597076224480573
+      weight:
+      - filter: mlp
+        value: 0.4344817912895681
+      - filter: self_attn
+        value: 0.4387166793804632
+      - value: 0.4386471800856095
+  - layer_range: [24, 32]
+    model: Qwen/Qwen3-32B
+- sources:
+  - layer_range: [32, 40]
+    model: top-50000/affine-1
+    parameters:
+      density:
+      - filter: mlp
+        value: 1.0
+      - filter: self_attn
+        value: 0.7831291573796967
+      - value: 0.9226063090384546
+      weight:
+      - filter: mlp
+        value: 0.5135169783202999
+      - filter: self_attn
+        value: 0.7583941591421037
+      - value: 0.5723583576819352
+  - layer_range: [32, 40]
+    model: vera6/affine-5GEY63hvpsKAELBtz64a5Xa7cdsEUdLqMK3JEdxfoQ1i1GqK
+    parameters:
+      density:
+      - filter: mlp
+        value: 1.0
+      - filter: self_attn
+        value: 0.8528163771709938
+      - value: 1.0
+      weight:
+      - filter: mlp
+        value: 0.43876479432687154
+      - filter: self_attn
+        value: 0.4204235193682076
+      - value: 0.32192059514666543
+  - layer_range: [32, 40]
+    model: Qwen/Qwen3-32B
+- sources:
+  - layer_range: [40, 48]
+    model: top-50000/affine-1
+    parameters:
+      density:
+      - filter: mlp
+        value: 0.9046399926064932
+      - filter: self_attn
+        value: 0.9104164235311611
+      - value: 0.8623631702346592
+      weight:
+      - filter: mlp
+        value: 0.6549986836908509
+      - filter: self_attn
+        value: 0.8706232995931947
+      - value: 0.5002718020702596
+  - layer_range: [40, 48]
+    model: vera6/affine-5GEY63hvpsKAELBtz64a5Xa7cdsEUdLqMK3JEdxfoQ1i1GqK
+    parameters:
+      density:
+      - filter: mlp
+        value: 0.8389402173699342
+      - filter: self_attn
+        value: 1.0
+      - value: 1.0
+      weight:
+      - filter: mlp
+        value: 0.7295865662036852
+      - filter: self_attn
+        value: 0.43511594367568296
+      - value: 0.5582304440814098
+  - layer_range: [40, 48]
+    model: Qwen/Qwen3-32B
+- sources:
+  - layer_range: [48, 56]
+    model: top-50000/affine-1
+    parameters:
+      density:
+      - filter: mlp
+        value: 1.0
+      - filter: self_attn
+        value: 1.0
+      - value: 1.0
+      weight:
+      - filter: mlp
+        value: 0.3092258419666021
+      - filter: self_attn
+        value: 0.40211397835787
+      - value: 0.2851252258686327
+  - layer_range: [48, 56]
+    model: vera6/affine-5GEY63hvpsKAELBtz64a5Xa7cdsEUdLqMK3JEdxfoQ1i1GqK
+    parameters:
+      density:
+      - filter: mlp
+        value: 1.0
+      - filter: self_attn
+        value: 0.913132072900269
+      - value: 1.0
+      weight:
+      - filter: mlp
+        value: 0.41352066071089494
+      - filter: self_attn
+        value: 0.5686255839143104
+      - value: 0.657158400029666
+  - layer_range: [48, 56]
+    model: Qwen/Qwen3-32B
+- sources:
+  - layer_range: [56, 64]
+    model: top-50000/affine-1
+    parameters:
+      density:
+      - filter: mlp
+        value: 0.9928400962381797
+      - filter: self_attn
+        value: 0.8922768698214384
+      - value: 0.9409587508862084
+      weight:
+      - filter: mlp
+        value: 0.5113888997807445
+      - filter: self_attn
+        value: 0.3358491219251021
+      - value: 0.3544253730222435
+  - layer_range: [56, 64]
+    model: vera6/affine-5GEY63hvpsKAELBtz64a5Xa7cdsEUdLqMK3JEdxfoQ1i1GqK
+    parameters:
+      density:
+      - filter: mlp
+        value: 1.0
+      - filter: self_attn
+        value: 0.9949361449166612
+      - value: 0.9901580279715114
+      weight:
+      - filter: mlp
+        value: 0.26019741642486394
+      - filter: self_attn
+        value: 0.5783873344592229
+      - value: 0.6473002750571362
+  - layer_range: [56, 64]
+    model: Qwen/Qwen3-32B
