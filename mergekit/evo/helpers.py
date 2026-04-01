@@ -32,6 +32,9 @@ def _eval_model(
     task_manager: Optional[lm_eval.tasks.TaskManager] = None,
     **kwargs,
 ) -> Dict[str, Any]:
+    if os.environ.get("confirm_run_unsafe_code", "false").lower() == "true":
+        kwargs["confirm_run_unsafe_code"] = True
+  
     results = lm_eval.simple_evaluate(
         model=model,
         model_args=model_args,
@@ -42,13 +45,11 @@ def _eval_model(
         **kwargs,
     )
 
-    # # TODO: implement model rambling detect logic
-    # if detect_rambling(results):
-    #     return {"score": 0.0, "results": {task.name: {"acc": 0.0} for task in tasks}}
-  
     logging.info(results["results"])
     res = 0
+    import json
     for task in tasks:
+        print(results)
         res += results["results"][task.name][task.metric] * task.weight
     return {"score": res, "results": results["results"]}
 
@@ -76,10 +77,10 @@ def evaluate_model(
             **(model_kwargs or {}),
         }
         if vllm:
-            model_args["gpu_memory_utilization"] = 0.75
+            model_args["gpu_memory_utilization"] = 0.95
             model_args["tensor_parallel_size"] = 1
-            model_args["batch_size"] = 7
-            model_args["max_model_len"] = 20480
+            model_args["batch_size"] = "auto"
+            model_args["max_model_len"] = 40960
             model_args["enforce_eager"] = True
         else:
             model_args["use_cache"] = True

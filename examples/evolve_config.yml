@@ -1,10 +1,9 @@
 genome:
   models:
+    # - EdmondMillion/affine-28-5CSriXZUwkoqdKBF4kqgRPBgrRiyPbLEo6TBaR3rW3u5qo4T
+    # - vera6/affine-5GEY63hvpsKAELBtz64a5Xa7cdsEUdLqMK3JEdxfoQ1i1GqK
     - jeff4000/4b_1
     - jeff4000/4b_2
-    # - affshoot/Affine-II_5FLiMuk4H8vKRQ19vs3phPdpdkCtqAeaWVRqufgUXxvM4QzQ
-    # - anton-ro/affine-5DZTN94ofug3s2oPN7ehuKFGekQkGVRGWnmsPRqab1tVDABc
-    # - jeff4000/4b_4
   merge_method: ties
   # base_model: Qwen/Qwen3-32B
   base_model: Qwen/Qwen3-4B
@@ -16,18 +15,28 @@ genome:
 
 
 tasks:
-  # - name: hellaswag
+  # - name: webqs
   #   weight: 1.0
-  # - name: winogrande
+  # - name: humaneval
   #   weight: 1.0
-  - name: cryptarithm
-    weight: 1.0
-    metric: accuracy,none
-  - name: trace
-    weight: 1.0
-    metric: accuracy,none
+      # metric: "pass@1,none"
+  # - name: truthfulqa
+  #   wiehgt: 1.0
+  # - name: asdiv
+  #   weight: 1.0
+  # - name: coqa
+  #   weight: 1.0
+  #   metric: "em,none"
+  # - name: coqa
+  #   weight: 1.0
+  #   metric: "f1,none"
+  # - name: fda
+  #   weight: 1.0
+  #   metric: "contains,none"
+  - name: drop
+    weight: 10.0
 
-limit: 10
 num_fewshot: 0
 apply_chat_template: true
 fewshot_as_multiturn: true
+confirm_run_unsafe_code: true
